@@ -1,0 +1,12 @@
+{
+  "name": "mail-audit-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check server.mjs && node --check mail-service.mjs && node --check mail-parser.mjs && node test/mail-parser.test.mjs && node test/mail-serialization.security.test.mjs && node test/mail-service.test.mjs"
+  }
+}

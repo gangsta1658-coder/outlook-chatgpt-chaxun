@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>邮箱邮件检查</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MAIL AUDIT</p>
+          <h1>邮箱邮件检查</h1>
+          <p class="subtitle">只读取邮箱邮件，不访问 ChatGPT 账号接口</p>
+        </div>
+        <div class="privacy-note">凭据不写入服务器，邮件结果仅保留在当前标签页</div>
+      </header>
+
+      <section class="import-panel" aria-labelledby="import-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="import-title">导入邮箱</h2>
+            <p>每行一个账号，格式：邮箱----密码----client_id----refresh_token</p>
+          </div>
+          <div class="parse-summary" id="parse-summary">等待输入</div>
+        </div>
+        <textarea id="account-input" spellcheck="false" autocomplete="off" placeholder="name@outlook.com----密码----client_id----refresh_token"></textarea>
+        <div class="import-footer">
+          <span class="field-hint">密码段仅为兼容原格式，系统不会使用或保存。</span>
+          <div class="import-actions">
+            <button class="button quiet" id="clear-button" type="button">清空</button>
+            <button class="button primary" id="check-button" type="button">查询邮件</button>
+          </div>
+        </div>
+        <div class="parse-errors" id="parse-errors" hidden></div>
+      </section>
+
+      <section class="results-section" aria-labelledby="results-title">
+        <div class="results-heading">
+          <div>
+            <h2 id="results-title">查询结果</h2>
+            <p id="results-caption">还没有查询记录</p>
+          </div>
+          <div class="filters" role="group" aria-label="状态筛选">
+            <button class="filter active" data-filter="all" type="button">全部 <span>0</span></button>
+            <button class="filter" data-filter="banned" type="button">已封禁 <span>0</span></button>
+            <button class="filter" data-filter="ok" type="button">未发现 <span>0</span></button>
+            <button class="filter" data-filter="error" type="button">失败 <span>0</span></button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>邮箱</th>
+                <th>Credits</th>
+                <th>封禁邮件</th>
+                <th>奖励邮件</th>
+                <th>检查时间</th>
+                <th>详情</th>
+              </tr>
+            </thead>
+            <tbody id="results-body">
+              <tr class="empty-row"><td colspan="6">导入邮箱后，结果会显示在这里</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <nav class="pagination" id="pagination" aria-label="结果分页" hidden>
+          <button class="icon-button" id="prev-page" type="button" aria-label="上一页">‹</button>
+          <span id="page-label">第 1 / 1 页</span>
+          <button class="icon-button" id="next-page" type="button" aria-label="下一页">›</button>
+        </nav>
+      </section>
+    </main>
+    <dialog class="mail-modal" id="mail-modal" hidden aria-labelledby="mail-dialog-title" aria-describedby="mail-dialog-caption">
+      <div class="mail-modal-backdrop" data-close-mail-modal></div>
+      <div class="mail-dialog" role="document" tabindex="-1">
+        <header class="mail-dialog-header">
+          <div>
+            <p class="eyebrow">MAILBOX</p>
+            <h2 id="mail-dialog-title">邮箱邮件</h2>
+            <p class="mail-dialog-caption" id="mail-dialog-caption"></p>
+          </div>
+          <button class="icon-button mail-close" id="mail-close" type="button" aria-label="关闭邮件查看器" title="关闭">×</button>
+        </header>
+        <div class="mail-dialog-body">
+          <aside class="mail-list-panel" aria-label="邮件列表">
+            <div class="mail-list-heading">
+              <span>邮件</span>
+              <span class="mail-list-count" id="mail-list-count">0</span>
+            </div>
+            <div class="mail-list" id="mail-list" role="listbox" aria-label="邮箱邮件列表"></div>
+            <p class="mail-empty" id="mail-list-empty" hidden>没有可查看的邮件</p>
+          </aside>
+          <article class="mail-content-panel" aria-live="polite">
+            <div class="mail-content-empty" id="mail-content-empty">从左侧选择一封邮件查看内容</div>
+            <div id="mail-content" hidden>
+              <h3 class="mail-content-subject" id="mail-content-subject"></h3>
+              <dl class="mail-content-meta">
+                <div><dt>发件人</dt><dd id="mail-content-from">—</dd></div>
+                <div><dt>时间</dt><dd id="mail-content-time">—</dd></div>
+                <div><dt>文件夹</dt><dd id="mail-content-folder">—</dd></div>
+              </dl>
+              <pre class="mail-content-body" id="mail-content-body"></pre>
+            </div>
+          </article>
+        </div>
+      </div>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
