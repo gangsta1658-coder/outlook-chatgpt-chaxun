@@ -1,0 +1,28 @@
+node_modules/
+coverage/
+__pycache__/
+*.py[cod]
+*.log
+npm-debug.log*
+
+# Local credentials and deployment secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# Local archives and editor files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

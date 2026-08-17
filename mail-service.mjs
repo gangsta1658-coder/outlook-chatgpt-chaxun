@@ -15,6 +15,23 @@ const DEFAULT_TIMEOUT_MS = 20_000;
 const MAX_MESSAGES = 100;
 const MAX_RESPONSE_CHARS = 8 * 1024 * 1024;
 
+// The normal Graph request only returns the newest messages. Keep a small,
+// bounded set of targeted searches for localized reward/deactivation mail so
+// an older Chinese message is still visible to the parser. These terms are
+// intentionally broad enough to cover Simplified/Traditional wording; the
+// parser remains the authority for deciding whether a message is a match.
+const TARGETED_SEARCH_QUERIES = Object.freeze([
+  '"Access Deactivated"',
+  '"OpenAI API"',
+  '"ChatGPT Desktop referral reward"',
+  '"桌面版"',
+  '"奖励"',
+  '"额度"',
+  '"积分"',
+  '"停用"',
+  '"封禁"',
+]);
+
 const TOKEN_ATTEMPTS = [
   { name: "common-default-graph", url: COMMON_TOKEN_URL, protocol: "graph" },
   { name: "common-graph", url: COMMON_TOKEN_URL, scope: GRAPH_SCOPE, protocol: "graph" },
@@ -169,13 +186,8 @@ function compactMessage(message) {
 }
 
 async function fetchGraphTargetedMessages(accessToken, options = {}) {
-  const queries = [
-    '"Access Deactivated"',
-    '"OpenAI API"',
-    '"ChatGPT Desktop referral reward"',
-  ];
   const found = [];
-  for (const query of queries) {
+  for (const query of TARGETED_SEARCH_QUERIES) {
     const url = new URL(GRAPH_MESSAGES_URL);
     url.searchParams.set("$search", query);
     url.searchParams.set("$select", "id,subject,bodyPreview,receivedDateTime,from,sender");

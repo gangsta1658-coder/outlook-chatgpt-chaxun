@@ -3,6 +3,7 @@ import { inspectMailbox } from "../mail-service.mjs";
 
 const originalFetch = globalThis.fetch;
 let tokenCalls = 0;
+const graphSearches = [];
 globalThis.fetch = async (url) => {
   const target = String(url);
   if (target.includes("oauth2/v2.0/token")) {
@@ -13,6 +14,8 @@ globalThis.fetch = async (url) => {
     return new Response(JSON.stringify({ access_token: "access-token", expires_in: 3600 }), { status: 200 });
   }
   if (target.includes("graph.microsoft.com/v1.0/me/messages")) {
+    const search = new URL(target).searchParams.get("$search");
+    if (search) graphSearches.push(search);
     return new Response(JSON.stringify({ value: [{ subject: "OpenAI API - Access Deactivated", bodyPreview: "" }] }), { status: 200 });
   }
   throw new Error(`unexpected URL: ${target}`);
@@ -22,6 +25,12 @@ try {
   const result = await inspectMailbox({ email: "user@example.com", clientId: "client", refreshToken: "refresh" }, { timeoutMs: 1000 });
   assert.equal(result.messages.length, 1);
   assert.ok(tokenCalls >= 2);
+  assert.ok(graphSearches.includes('"桌面版"'));
+  assert.ok(graphSearches.includes('"奖励"'));
+  assert.ok(graphSearches.includes('"额度"'));
+  assert.ok(graphSearches.includes('"积分"'));
+  assert.ok(graphSearches.includes('"停用"'));
+  assert.ok(graphSearches.includes('"封禁"'));
 } finally {
   globalThis.fetch = originalFetch;
 }

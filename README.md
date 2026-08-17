@@ -3,14 +3,14 @@
 一个面向 Microsoft 邮箱的轻量邮件检查工具。它根据邮箱中的指定邮件，展示 ChatGPT Desktop referral reward 的 Credits 数值，并标记疑似 `OpenAI API - Access Deactivated` 邮件；不会访问 ChatGPT 或 OpenAI 账号接口。
 
 > 仅用于你拥有或已获得明确授权的邮箱。请遵守 Microsoft、OpenAI 及所在地区的服务条款和法律。
-> 已部署地址https://zh.kpro.eu.cc/
+> 当前部署地址：https://zh.kpro.eu.cc/
 
 ## 功能
 
 - 批量导入四段格式账号：`邮箱----密码----client_id----refresh_token`
 - 通过 Microsoft OAuth 读取邮箱，优先使用 Microsoft Graph，必要时回退到 OAuth IMAP
-- 识别标题为 `Your ChatGPT Desktop referral reward is ready` 的奖励邮件，并提取正文中 `credits` 前的数字
-- 识别含 `OpenAI API` 与 `Access Deactivated/Deactivation` 的邮件，作为封禁邮件信号
+- 识别英文、简体中文和繁体中文的奖励邮件，并提取 `credits`、`额度`、`积分` 或 `点数` 前的数字
+- 识别含 `OpenAI API`/`ChatGPT` 及 `Access Deactivated`、停用、禁用、封禁、冻结、暂停等表述的邮件，作为封禁邮件信号
 - 结果按全部、已封禁、未发现、失败筛选，每页显示 100 条
 - 可打开本次读取到的邮件列表，自由选择邮件并以纯文本查看正文
 - 提供 `GET /healthz` 健康检查和 `POST /api/check` 查询接口
