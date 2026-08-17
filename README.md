@@ -3,6 +3,7 @@
 一个面向 Microsoft 邮箱的轻量邮件检查工具。它根据邮箱中的指定邮件，展示 ChatGPT Desktop referral reward 的 Credits 数值，并标记疑似 `OpenAI API - Access Deactivated` 邮件；不会访问 ChatGPT 或 OpenAI 账号接口。
 
 > 仅用于你拥有或已获得明确授权的邮箱。请遵守 Microsoft、OpenAI 及所在地区的服务条款和法律。
+> 已部署地址https://zh.kpro.eu.cc/
 
 ## 功能
 
