@@ -114,10 +114,79 @@ const englishConditionalNotice = inspectMailboxMessages([
 ]);
 assert.equal(englishConditionalNotice.banned, false);
 
+const englishHelpFalsePositive = inspectMailboxMessages([
+  { subject: "OpenAI API account suspended: troubleshooting guide", bodyPreview: "This article explains how to appeal." },
+]);
+assert.equal(englishHelpFalsePositive.banned, false);
+
+const englishQuotedFalsePositive = inspectMailboxMessages([
+  { subject: "Re: Support ticket", bodyPreview: "See the email \"OpenAI API - Access Deactivated\" and submit an appeal." },
+]);
+assert.equal(englishQuotedFalsePositive.banned, false);
+
+const forwardedCanonicalFalsePositive = inspectMailboxMessages([
+  { subject: "Fwd: OpenAI API - Access Deactivated", bodyPreview: "Forwarded for reference." },
+]);
+assert.equal(forwardedCanonicalFalsePositive.banned, false);
+
+const quotedActiveFalsePositive = inspectMailboxMessages([
+  { subject: "OpenAI account notice", bodyPreview: "Thanks for the reply.\n> Your API access has been deactivated." },
+]);
+assert.equal(quotedActiveFalsePositive.banned, false);
+
+const englishAgentNotice = inspectMailboxMessages([
+  { subject: "OpenAI account notice", bodyPreview: "We have deactivated your API access." },
+]);
+assert.equal(englishAgentNotice.banned, true);
+
 const englishNotDeactivated = inspectMailboxMessages([
   { subject: "OpenAI API account notice", bodyPreview: "Your API access has not been deactivated." },
 ]);
 assert.equal(englishNotDeactivated.banned, false);
+
+const englishRestoredNotice = inspectMailboxMessages([
+  { subject: "OpenAI API - Access Deactivated", bodyPreview: "Your API access has been restored." },
+]);
+assert.equal(englishRestoredNotice.banned, false);
+
+const historicalBanResolved = inspectMailboxMessages([
+  {
+    subject: "OpenAI API - Access Deactivated",
+    bodyPreview: "Your API access has been deactivated.",
+    receivedDateTime: "2026-08-16T10:00:00Z",
+  },
+  {
+    subject: "OpenAI API - Access Restored",
+    bodyPreview: "Your API access has been restored.",
+    receivedDateTime: "2026-08-17T10:00:00Z",
+  },
+]);
+assert.equal(historicalBanResolved.banned, false);
+
+const unrelatedAccountSecurity = inspectMailboxMessages([
+  { subject: "Microsoft account security", bodyPreview: "Your account has been locked. Please verify your identity." },
+]);
+assert.equal(unrelatedAccountSecurity.banned, false);
+
+const openAiKeyLifecycle = inspectMailboxMessages([
+  { subject: "OpenAI API key revoked", bodyPreview: "Your API key has been revoked. Create a new key." },
+]);
+assert.equal(openAiKeyLifecycle.banned, false);
+
+const unrelatedChineseAccountSecurity = inspectMailboxMessages([
+  { subject: "Microsoft ????", bodyPreview: "???????????????" },
+]);
+assert.equal(unrelatedChineseAccountSecurity.banned, false);
+
+const chineseKeyLifecycle = inspectMailboxMessages([
+  { subject: "OpenAI API ?????", bodyPreview: "????? API ???" },
+]);
+assert.equal(chineseKeyLifecycle.banned, false);
+
+const chineseRestoredNotice = inspectMailboxMessages([
+  { subject: "OpenAI API - ???????", bodyPreview: "??????????????????" },
+]);
+assert.equal(chineseRestoredNotice.banned, false);
 
 const rewardWithUsageNotice = inspectMailboxMessages([
   {
@@ -142,7 +211,7 @@ assert.equal(noMatch.credits, null);
 assert.equal(noMatch.banned, false);
 
 const bodyOnly = inspectMailboxMessages([
-  { subject: "Account notice", bodyPreview: "OpenAI API - Access Deactivated", receivedDateTime: "2026-08-17T11:00:00Z" },
+  { subject: "OpenAI account notice", bodyPreview: "Your API access has been deactivated.", receivedDateTime: "2026-08-17T11:00:00Z" },
 ]);
 assert.equal(bodyOnly.banned, true);
 
@@ -197,6 +266,14 @@ assert.equal(bounded.length, 100);
 assert.equal(bounded[0].body.length, 8 * 1024);
 assert.equal(bounded[0].bodyPreview.length, 2 * 1024);
 assert.ok(bounded.reduce((sum, message) => sum + message.body.length, 0) <= 1024 * 1024);
+
+const priorityMessages = Array.from({ length: 101 }, (_, index) => ({
+  id: `priority-${index}`,
+  subject: `Message ${index}`,
+}));
+const prioritized = serializeMailboxMessages(priorityMessages, { maxMessages: 100, priorityIndexes: [100] });
+assert.equal(prioritized.length, 100);
+assert.equal(prioritized[0].id, "priority-100");
 
 const malformed = serializeMailboxMessages([{ id: null, subject: null, from: { nope: true }, body: { secret: "x" } }]);
 assert.equal(malformed[0].id, "message-1");

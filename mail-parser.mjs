@@ -4,39 +4,35 @@ const REWARD_SUBJECT = /\bchatgpt\s+desktop\s+referral\s+reward\s+is\s+ready\b/i
 // referral reward email as well.
 const REWARD_SUBJECT_ZH = /(?:chatgpt\s*)????[\s\S]{0,80}(?:??|??|??|??)[\s\S]{0,40}(?:??|??|??|??)/iu;
 const REWARD_BODY_ZH = /(?:chatgpt\s*)????[\s\S]{0,140}(?:??|??|??|??)[\s\S]{0,100}(?:??|??|??|??|??|??|??)/iu;
-const BANNED_SUBJECT = /\bopenai\b[\s\S]{0,100}\bapi\b[\s\S]{0,180}\baccess\b[\s\S]{0,80}\bdeactivat(?:ed|ion)\b/i;
-const BANNED_REVERSED = /\baccess\b[\s\S]{0,80}\bdeactivat(?:ed|ion)\b[\s\S]{0,180}\bopenai\b[\s\S]{0,100}\bapi\b/i;
-const ENGLISH_BANNED_SUBJECT = /\b(?:openai|chatgpt)\b[\s\S]{0,100}\b(?:api|account|access)\b[\s\S]{0,100}\b(?:disabled|suspended|blocked|revoked|terminated)\b/i;
-const ENGLISH_BANNED_CANONICAL = /\b(?:openai\s+api\s*[-:|]\s*access|access\s+(?:deactivated|disabled|suspended|blocked|revoked|terminated)\s*[-:|]\s*openai\s+api)\b/i;
-const ENGLISH_BANNED_BODY_ACTIVE = /\b(?:(?:your|the)\s+)?(?:openai\s+)?(?:api\s+)?(?:access|account)\b[\s\S]{0,40}\b(?:has\s+been|is|was|has\s+become)\b[\s\S]{0,20}\b(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)\b/i;
-const ENGLISH_BANNED_RESOLVED = /\b(?:not|never|has\s+not|hasn['?]t|isn['?]t|wasn['?]t)\b[\s\S]{0,30}\b(?:deactivat|disabl|suspend|block|revok)|\b(?:access|account)\b[\s\S]{0,40}\b(?:restored|reactivated|re-?enabled|enabled|active)\b/i;
-const ENGLISH_BANNED_NON_NOTICE = /\b(?:how|what|why|when|if|whether|may|might|could|would|can|guide|documentation|help|learn|avoid|prevent|example|faq)\b/i;
-// Microsoft localizes account notices. Require a nearby OpenAI/API/account
-// context so generic mail mentioning a restriction is not marked as banned.
-// Both simplified and traditional Chinese terms are included.
-const CHINESE_BANNED_CONTEXT = /(?:openai|chatgpt|api|??????|??????|??|??|??|??|??|??|??|??|??|??|????|????|????|????|????|????|????|??|??|??|??)/iu;
+const ENGLISH_BANNED_BRAND_CONTEXT = /\b(?:openai|chatgpt)\b/i;
+const ENGLISH_BANNED_CANONICAL = /\b(?:openai\s+api\s*[-:|]\s*(?:access\s+)?(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)|(?:access\s+)?(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)\s*[-:|]\s*openai\s+api)\b/i;
+const ENGLISH_BANNED_DIRECT = /\b(?:openai|chatgpt)\b[\s\S]{0,100}\b(?:api\s+)?(?:access|account)\b[\s\S]{0,50}\b(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)\b/i;
+const ENGLISH_BANNED_ACTIVE = /\b(?:(?:your|the)\s+)?(?:openai\s+)?(?:api\s+)?(?:access|account)\b[\s\S]{0,60}\b(?:has\s+been|have\s+been|is|was|were)\b[\s\S]{0,24}\b(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)\b/i;
+const ENGLISH_BANNED_AGENT = /\b(?:we|openai)\b[\s\S]{0,20}\b(?:have|has)\b[\s\S]{0,12}\b(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)\b[\s\S]{0,60}\b(?:your\s+)?(?:openai\s+)?(?:api\s+)?(?:access|account)\b/i;
+const ENGLISH_BANNED_RESOLVED = /\b(?:not|never|has\s+not|hasn['?]t|isn['?]t|wasn['?]t)\b[\s\S]{0,30}\b(?:deactivat|disabl|suspend|block|revok)|\b(?:access|account)\b[\s\S]{0,60}\b(?:restored|reactivated|re-?enabled|enabled|active)\b/i;
+const ENGLISH_BANNED_CONDITIONAL = /^\s*(?:if|when|whether)\b[\s\S]{0,90}\b(?:access|account)\b[\s\S]{0,60}\b(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)\b|\b(?:may|might|could|would|can)\b[\s\S]{0,60}\b(?:deactivat(?:ed|ion)|disabled|suspended|blocked|revoked|terminated)\b/i;
+const ENGLISH_BANNED_INSTRUCTIONAL = /\b(?:how\s+to|guide|documentation|help\s+center|learn|example|faq|avoid|prevent|troubleshooting)\b/i;
+const REPLY_SUBJECT_PREFIX = /^(?:(?:re|fw|fwd)\s*[:?]\s*|(?:??|??|??|??)\s*[:?]\s*)+/i;
+// Only evaluate Chinese phrases as an account/API notification when the
+// message explicitly identifies OpenAI or ChatGPT. This avoids generic
+// Microsoft security notices and API-key lifecycle mail being called a ban.
+const CHINESE_BANNED_BRAND_CONTEXT = /(?:openai|chatgpt)/iu;
+const CHINESE_BANNED_RESOURCE = /(?:api(?:\s*(?:????|????|????|??|??|??|????|????))?|??|??|??|??|??|??)/iu;
+const CHINESE_BANNED_KEY_CONTEXT = /(?:api\s*)?(?:??|??|key|??|??)/iu;
 const CHINESE_BANNED_STRONG_STATUS = /(?:??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|???|????|????|????|????|????|????|????|????|????|????|?????|?????|????|????|?????|????|????|????|???|???|??|????|????|?????|?????|????|????|??|??|????|????|???|???|????)/iu;
-const CHINESE_BANNED_WEAK_STATUS = /(?:??|??)/iu;
-const CHINESE_BANNED_ACTIVE_MARKER = /(?:?|??|?|?(?:?|?)?|??|??|??|??|??|??|??|??|??|??|??)/iu;
-const CHINESE_BANNED_NON_NOTICE_PREFIX = /^(?:??|?|?|??|??|??|??|??|??|??|??|??|??|??|??)/iu;
-const CHINESE_BANNED_NON_NOTICE = /(?:??|??|??|??|??|??|??|??|??|??|??|????|????|faq|??|??)/iu;
+const CHINESE_BANNED_WEAK_STATUS = /(?:??)/iu;
+const CHINESE_BANNED_ACTIVE_MARKER = /(?:?|??|?|?(?:?|?)?|??|??|??|??|??|??|??|??|??)/iu;
+const CHINESE_BANNED_NON_NOTICE_PREFIX = /^(?:??|?|?|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??|??)/iu;
+const CHINESE_BANNED_INSTRUCTIONAL = /(?:????|????|????|????|??|??|??|????|????|faq|??|??|????|????)/iu;
 const CHINESE_BANNED_ACTIVE_STATUS = new RegExp(
   `(?:${CHINESE_BANNED_ACTIVE_MARKER.source})[\\s\\S]{0,8}(?:${CHINESE_BANNED_STRONG_STATUS.source}|${CHINESE_BANNED_WEAK_STATUS.source})`,
   "iu",
 );
-const CHINESE_BANNED_STRONG_MESSAGE = new RegExp(
-  `(?:${CHINESE_BANNED_CONTEXT.source})[\\s\\S]{0,120}(?:${CHINESE_BANNED_STRONG_STATUS.source})|(?:${CHINESE_BANNED_STRONG_STATUS.source})[\\s\\S]{0,120}(?:${CHINESE_BANNED_CONTEXT.source})`,
+const CHINESE_BANNED_DIRECT = new RegExp(
+  `(?:${CHINESE_BANNED_RESOURCE.source})[\\s\\S]{0,60}(?:${CHINESE_BANNED_ACTIVE_STATUS.source})|(?:${CHINESE_BANNED_ACTIVE_STATUS.source})[\\s\\S]{0,60}(?:${CHINESE_BANNED_RESOURCE.source})`,
   "iu",
 );
-const CHINESE_BANNED_ACTIVE_MESSAGE = new RegExp(
-  `(?:${CHINESE_BANNED_CONTEXT.source})[\\s\\S]{0,120}(?:${CHINESE_BANNED_ACTIVE_STATUS.source})|(?:${CHINESE_BANNED_ACTIVE_STATUS.source})[\\s\\S]{0,120}(?:${CHINESE_BANNED_CONTEXT.source})`,
-  "iu",
-);
-const CHINESE_BANNED_WEAK_MESSAGE = new RegExp(
-  `(?:${CHINESE_BANNED_CONTEXT.source})[\\s\\S]{0,120}(?:${CHINESE_BANNED_WEAK_STATUS.source})|(?:${CHINESE_BANNED_WEAK_STATUS.source})[\\s\\S]{0,120}(?:${CHINESE_BANNED_CONTEXT.source})`,
-  "iu",
-);
-const CHINESE_BANNED_RESOLVED = /(?:??(?:??|??|??|??|??|??)|??|??(?:??|??|??|??)|??(?:??|??|??)|????|????|????|?????|?????|?????|???(?:??|??)|?????)/iu;
+const CHINESE_BANNED_RESOLVED = /(?:?|??|??|??|??|??)(?![\s\S]{0,8}(?:??|??|??))[\s\S]{0,8}(?:??(?:??|??|??|??|??|??)|??|??(?:??|??|??|??)|??(?:??|??|??)|????|????)|(?:??|??|??|??|??)[\s\S]{0,8}(?:???|????|????|????)/iu;
 const CREDITS_PATTERN = /(?:^|[^\d])([\d]{1,9}(?:,[\d]{3})*(?:\.\d{1,2})?)\s*(?:chatgpt\s+)?credits?\b/gi;
 const CHINESE_CREDITS_PATTERN = /(?:^|[^\d?-?])([\d?-?]{1,9}(?:[,?]\s*[\d?-?]{3})*(?:[.?][\d?-?]{1,2})?)\s*(?:?\s*)?(?:??|??|??|??|??|??)(?![\p{L}\p{N}])/giu;
 const MAX_CREDITS = 1_000_000_000;
@@ -102,11 +98,14 @@ export function inspectMailboxMessages(messages) {
   const list = Array.isArray(messages) ? messages : [];
   const rewardMatches = [];
   const bannedMatches = [];
+  const resolvedMatches = [];
   for (const [index, message] of list.entries()) {
     const subject = normalizeText(message?.subject || "");
     const body = normalizeText(messageBody(message));
     const receivedAt = normalizeDate(message?.receivedDateTime || message?.receivedAt || message?.date);
-    if (isDeactivationMessage(subject, body)) {
+    if (isResolutionMessage(subject, body)) {
+      resolvedMatches.push({ receivedAt, index });
+    } else if (isDeactivationMessage(subject, body)) {
       bannedMatches.push({
         receivedAt,
         index,
@@ -121,8 +120,11 @@ export function inspectMailboxMessages(messages) {
   }
   rewardMatches.sort(newestFirst);
   bannedMatches.sort(newestFirst);
+  resolvedMatches.sort(newestFirst);
   const reward = rewardMatches[0] || null;
-  const banned = bannedMatches[0] || null;
+  const latestBan = bannedMatches[0] || null;
+  const latestResolution = resolvedMatches[0] || null;
+  const banned = latestBan && (!latestResolution || newestFirst(latestBan, latestResolution) <= 0) ? latestBan : null;
   return {
     credits: reward?.credits ?? null,
     rewardStatus: reward ? "found" : "not_found",
@@ -130,6 +132,7 @@ export function inspectMailboxMessages(messages) {
     banned: Boolean(banned),
     bannedReceivedAt: banned?.receivedAt || null,
     bannedSubject: banned?.subject || null,
+    matchedMessageIndexes: [banned?.index, reward?.index].filter(Number.isInteger),
     messageCount: list.length,
   };
 }
@@ -150,9 +153,14 @@ export function serializeMailboxMessages(messages, options = {}) {
     0,
     MAX_EXPOSED_TOTAL_BODY_CHARS,
   );
+  const priorityIndexes = Array.isArray(options.priorityIndexes)
+    ? options.priorityIndexes.filter((index) => Number.isInteger(index) && index >= 0 && index < list.length)
+    : [];
+  const orderedIndexes = [...new Set([...priorityIndexes, ...list.map((_, index) => index)])].slice(0, maxMessages);
   let bodyBudget = maxTotalBodyChars;
 
-  return list.slice(0, maxMessages).map((message, index) => {
+  return orderedIndexes.map((sourceIndex) => {
+    const message = list[sourceIndex];
     const rawBody = messageContent(message);
     const body = plainText(rawBody);
     const previewSource = plainText(contentText(message?.bodyPreview) || body);
@@ -165,7 +173,7 @@ export function serializeMailboxMessages(messages, options = {}) {
     const receivedValue = message?.receivedDateTime ?? message?.receivedAt ?? message?.date;
     const receivedDateTime = normalizeDate(receivedValue) || singleLine(plainText(receivedValue)).slice(0, 120) || null;
     const sourceId = singleLine(plainText(message?.id ?? message?.messageId)).slice(0, MAX_EXPOSED_ID_CHARS);
-    const id = sourceId || `message-${index + 1}`;
+    const id = sourceId || `message-${sourceIndex + 1}`;
     const messageId = singleLine(plainText(message?.messageId)).slice(0, MAX_EXPOSED_ID_CHARS) || null;
     const folder = singleLine(plainText(message?.folder)).slice(0, MAX_EXPOSED_FOLDER_CHARS) || null;
 
@@ -220,9 +228,18 @@ function isRewardMessage(subject, body) {
 }
 
 function messageBody(message) {
-  return [message?.bodyPreview, contentText(message?.body), contentText(message?.uniqueBody), message?.text]
-    .filter((value) => typeof value === "string" && value.trim())
-    .join("\n");
+  const source = [contentText(message?.uniqueBody), contentText(message?.body), message?.text, message?.bodyPreview]
+    .find((value) => typeof value === "string" && value.trim());
+  return stripQuotedContent(source || "");
+}
+
+function stripQuotedContent(value) {
+  return String(value || "")
+    .replace(/<blockquote\b[^>]*>[\s\S]*?<\/blockquote>/gi, "")
+    .split(/\r?\n/)
+    .filter((line) => !/^\s*>+/.test(line))
+    .join("\n")
+    .split(/\n\s*(?:On .+ wrote:|-----Original Message-----)\s*\n/i, 1)[0];
 }
 
 function messageContent(message) {
@@ -287,30 +304,71 @@ function normalizeSubject(value) {
 function isDeactivationMessage(subject, body) {
   const subjectText = normalizeSubject(subject);
   const bodyText = normalizeSubject(body);
-  if (isEnglishBannedMessage(subjectText, true) || isEnglishBannedMessage(bodyText, false)) return true;
-  if (isChineseBannedMessage(subjectText, true) || isChineseBannedMessage(bodyText, false)) return true;
-  return false;
+  const messageText = `${subjectText}\n${bodyText}`;
+  return isEnglishBannedMessage(subjectText, bodyText, messageText)
+    || isChineseBannedMessage(subjectText, bodyText, messageText);
 }
 
-function isEnglishBannedMessage(text, isSubject) {
-  if (!text) return false;
-  const canonical = BANNED_SUBJECT.test(text) || BANNED_REVERSED.test(text);
-  const matched = isSubject
-    ? ((canonical && !ENGLISH_BANNED_NON_NOTICE.test(text)) || ENGLISH_BANNED_SUBJECT.test(text))
-    : (ENGLISH_BANNED_CANONICAL.test(text) || ENGLISH_BANNED_BODY_ACTIVE.test(text));
-  return matched && !ENGLISH_BANNED_RESOLVED.test(text);
+function isResolutionMessage(subject, body) {
+  const subjectText = normalizeSubject(subject);
+  const bodyText = normalizeSubject(body);
+  const messageText = `${subjectText}\n${bodyText}`;
+  return isEnglishResolutionMessage(subjectText, bodyText, messageText)
+    || isChineseResolutionMessage(subjectText, bodyText, messageText);
 }
 
-function isChineseBannedMessage(text, isSubject) {
-  const sentences = text.split(/[???!??;\n]+/).map((part) => part.trim()).filter(Boolean);
-  return sentences.some((sentence) => {
-    if (CHINESE_BANNED_NON_NOTICE_PREFIX.test(sentence)) return false;
-    if (CHINESE_BANNED_NON_NOTICE.test(sentence) && !CHINESE_BANNED_ACTIVE_STATUS.test(sentence)) return false;
-    if ((isSubject && CHINESE_BANNED_STRONG_MESSAGE.test(sentence)) || CHINESE_BANNED_ACTIVE_MESSAGE.test(sentence)) {
-      return !CHINESE_BANNED_RESOLVED.test(sentence) || CHINESE_BANNED_ACTIVE_STATUS.test(sentence);
-    }
-    return CHINESE_BANNED_WEAK_MESSAGE.test(sentence) && CHINESE_BANNED_ACTIVE_STATUS.test(sentence);
+function isEnglishBannedMessage(subject, body, message) {
+  if (!ENGLISH_BANNED_BRAND_CONTEXT.test(message) || ENGLISH_BANNED_RESOLVED.test(message)) return false;
+  return isEnglishBannedNotice(subject, true) || isEnglishBannedNotice(body, false);
+}
+
+function isEnglishResolutionMessage(subject, body, message) {
+  if (!ENGLISH_BANNED_BRAND_CONTEXT.test(message)) return false;
+  return [subject, body].some((text) => noticeSegments(text).some((sentence) => {
+    if (!sentence || ENGLISH_BANNED_CONDITIONAL.test(sentence) || ENGLISH_BANNED_INSTRUCTIONAL.test(sentence)) return false;
+    return ENGLISH_BANNED_RESOLVED.test(sentence);
+  }));
+}
+
+function isEnglishBannedNotice(text, isSubject) {
+  return noticeSegments(text).some((sentence) => {
+    if (!sentence || (isSubject && REPLY_SUBJECT_PREFIX.test(sentence))) return false;
+    if (ENGLISH_BANNED_CONDITIONAL.test(sentence) || ENGLISH_BANNED_INSTRUCTIONAL.test(sentence)) return false;
+    return (isSubject && (ENGLISH_BANNED_CANONICAL.test(sentence) || ENGLISH_BANNED_DIRECT.test(sentence)))
+      || ENGLISH_BANNED_ACTIVE.test(sentence)
+      || ENGLISH_BANNED_AGENT.test(sentence);
   });
+}
+
+function isChineseBannedMessage(subject, body, message) {
+  if (!CHINESE_BANNED_BRAND_CONTEXT.test(message) || CHINESE_BANNED_RESOLVED.test(message)) return false;
+  return [subject, body].some((text, index) => {
+    if (index === 0 && REPLY_SUBJECT_PREFIX.test(text)) return false;
+    return noticeSegments(text).some((sentence) => {
+    if (!sentence || CHINESE_BANNED_KEY_CONTEXT.test(sentence)) return false;
+    if (CHINESE_BANNED_NON_NOTICE_PREFIX.test(sentence) || CHINESE_BANNED_INSTRUCTIONAL.test(sentence)) return false;
+    return CHINESE_BANNED_DIRECT.test(sentence);
+    });
+  });
+}
+
+function isChineseResolutionMessage(subject, body, message) {
+  if (!CHINESE_BANNED_BRAND_CONTEXT.test(message)) return false;
+  return [subject, body].some((text, index) => {
+    if (index === 0 && REPLY_SUBJECT_PREFIX.test(text)) return false;
+    return noticeSegments(text).some((sentence) => {
+    if (!sentence || CHINESE_BANNED_KEY_CONTEXT.test(sentence)) return false;
+    if (CHINESE_BANNED_NON_NOTICE_PREFIX.test(sentence) || CHINESE_BANNED_INSTRUCTIONAL.test(sentence)) return false;
+    return CHINESE_BANNED_RESOLVED.test(sentence);
+    });
+  });
+}
+
+function noticeSegments(text) {
+  return String(text || "")
+    .split(/[???!??;\.\n]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
 function normalizeText(value) {
