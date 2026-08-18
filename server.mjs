@@ -38,11 +38,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" || req.method === "HEAD") {
       return await serveStatic(url.pathname, req.method, res);
     }
-    return sendJson(res, 405, { error: "????????" });
+    return sendJson(res, 405, { error: "不支持的请求方法" });
   } catch (error) {
     const status = Number(error?.status || 500);
     return sendJson(res, status >= 400 && status < 600 ? status : 500, {
-      error: status === 413 ? "??????" : "???????????",
+      error: status === 413 ? "请求内容过大" : "服务器暂时无法处理请求",
     });
   }
 });
@@ -56,7 +56,7 @@ async function handleCheck(req, res) {
   const parsed = parseFourPartInput(payload?.input, MAX_ACCOUNTS);
   if (!parsed.accounts.length) {
     return sendJson(res, 400, {
-      error: "??????????",
+      error: "没有可查询的有效邮箱",
       errors: parsed.errors,
     });
   }
@@ -137,11 +137,11 @@ async function serveStatic(pathname, method, res) {
   const relative = decodeURIComponent(requested).replace(/^\/+/, "");
   const filePath = path.resolve(PUBLIC_ROOT, relative);
   if (filePath !== PUBLIC_ROOT && !filePath.startsWith(`${PUBLIC_ROOT}${path.sep}`)) {
-    return sendJson(res, 400, { error: "????" });
+    return sendJson(res, 400, { error: "非法路径" });
   }
   let stat;
-  try { stat = await fs.stat(filePath); } catch { return sendJson(res, 404, { error: "?????" }); }
-  if (!stat.isFile()) return sendJson(res, 404, { error: "?????" });
+  try { stat = await fs.stat(filePath); } catch { return sendJson(res, 404, { error: "页面不存在" }); }
+  if (!stat.isFile()) return sendJson(res, 404, { error: "页面不存在" });
   res.statusCode = 200;
   res.setHeader("content-type", MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream");
   res.setHeader("cache-control", requested === "/index.html" ? "no-store" : "public, max-age=300");
@@ -238,9 +238,9 @@ function setSecurityHeaders(res) {
 }
 
 function sanitizeClientError(error) {
-  return String(error?.message || "??????")
-    .replace(/https?:\/\/\S+/gi, "<????>")
-    .replace(/(?:access_token|refresh_token|client_secret|password)\s*[=:]\s*[^\s,}]+/gi, "$1=<???>")
+  return String(error?.message || "邮箱读取失败")
+    .replace(/https?:\/\/\S+/gi, "<隐藏地址>")
+    .replace(/(?:access_token|refresh_token|client_secret|password)\s*[=:]\s*[^\s,}]+/gi, "$1=<已隐藏>")
     .replace(/[\r\n]+/g, " ")
     .slice(0, 220);
 }

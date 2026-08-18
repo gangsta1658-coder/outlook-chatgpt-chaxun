@@ -30,8 +30,8 @@ assert.equal(result.bannedReceivedAt, "2026-08-17T10:00:00.000Z");
 
 const chineseReward = inspectMailboxMessages([
   {
-    subject: "?? ChatGPT ?????????????",
-    bodyPreview: "?? ChatGPT ???????????????????? 1,000 ???",
+    subject: "你的 ChatGPT 桌面版推荐奖励已经准备就绪",
+    bodyPreview: "你在 ChatGPT 桌面版发送第一条消息，因此你和好友各获得 1,000 额度。",
     receivedDateTime: "2026-08-17T09:00:00Z",
   },
 ]);
@@ -41,7 +41,7 @@ assert.equal(chineseReward.rewardStatus, "found");
 const chineseBodyReward = inspectMailboxMessages([
   {
     subject: "OpenAI",
-    bodyPreview: "?? ChatGPT ????????????????????????? ???? ???",
+    bodyPreview: "你的 ChatGPT 桌面版推荐奖励已经准备就绪，你的额度已就绪。已添加 １０００ 额度。",
   },
 ]);
 assert.equal(chineseBodyReward.credits, 1000);
@@ -49,58 +49,58 @@ assert.equal(chineseBodyReward.rewardStatus, "found");
 
 const chineseBanned = inspectMailboxMessages([
   {
-    subject: "OpenAI API - ???????",
-    bodyPreview: "?? API ??????????????????",
+    subject: "OpenAI API - 访问权限已停用",
+    bodyPreview: "你的 API 访问权限已被停用，暂时无法使用服务。",
   },
   {
-    subject: "?? ChatGPT ??????",
-    bodyPreview: "?????????????",
+    subject: "您的 ChatGPT 账号已被禁用",
+    bodyPreview: "如需帮助，请联系支持团队。",
   },
   {
-    subject: "??????",
-    bodyPreview: "?? OpenAI ???????",
+    subject: "账户封禁通知",
+    bodyPreview: "你的 OpenAI 账户已被暂停。",
   },
 ]);
 assert.equal(chineseBanned.banned, true);
 
 const traditionalBanned = inspectMailboxMessages([
   {
-    subject: "OpenAI API - ???????",
-    bodyPreview: "?? OpenAI ??????????? API?",
+    subject: "OpenAI API - 存取權限已停用",
+    bodyPreview: "您的 OpenAI 帳戶已被凍結，無法使用 API。",
   },
 ]);
 assert.equal(traditionalBanned.banned, true);
 
 const chineseRestrictionResolved = inspectMailboxMessages([
   {
-    subject: "OpenAI API - ???????",
-    bodyPreview: "???????????????????",
+    subject: "OpenAI API - 访问限制已解除",
+    bodyPreview: "您的访问权限已恢复，可以正常使用服务。",
   },
 ]);
 assert.equal(chineseRestrictionResolved.banned, false);
 
 const chinesePolicyNotice = inspectMailboxMessages([
-  { subject: "OpenAI ????", bodyPreview: "?????????????" },
+  { subject: "OpenAI 服务条款", bodyPreview: "禁止自动化访问和滥用服务。" },
 ]);
 assert.equal(chinesePolicyNotice.banned, false);
 
 const chineseHelpNotice = inspectMailboxMessages([
-  { subject: "ChatGPT ????", bodyPreview: "??????????????" },
+  { subject: "ChatGPT 帮助中心", bodyPreview: "本文介绍访问限制和常见问题。" },
 ]);
 assert.equal(chineseHelpNotice.banned, false);
 
 const chineseConditionalNotice = inspectMailboxMessages([
-  { subject: "OpenAI ????", bodyPreview: "???? API ????????????????" },
+  { subject: "OpenAI 使用指南", bodyPreview: "如果你的 API 访问权限被限制，请联系支持团队。" },
 ]);
 assert.equal(chineseConditionalNotice.banned, false);
 
 const chineseStatusGuide = inspectMailboxMessages([
-  { subject: "OpenAI API ????", bodyPreview: "?????????????" },
+  { subject: "OpenAI API 停用指南", bodyPreview: "本文说明停用和恢复的流程。" },
 ]);
 assert.equal(chineseStatusGuide.banned, false);
 
 const chineseActiveStatusNotice = inspectMailboxMessages([
-  { subject: "OpenAI API ??????????", bodyPreview: "?? API ?????????" },
+  { subject: "OpenAI API 已停用：如何恢复访问", bodyPreview: "你的 API 访问权限已被停用。" },
 ]);
 assert.equal(chineseActiveStatusNotice.banned, true);
 
@@ -174,31 +174,31 @@ const openAiKeyLifecycle = inspectMailboxMessages([
 assert.equal(openAiKeyLifecycle.banned, false);
 
 const unrelatedChineseAccountSecurity = inspectMailboxMessages([
-  { subject: "Microsoft ????", bodyPreview: "???????????????" },
+  { subject: "Microsoft 账户安全", bodyPreview: "你的账户已被锁定，请验证身份。" },
 ]);
 assert.equal(unrelatedChineseAccountSecurity.banned, false);
 
 const chineseKeyLifecycle = inspectMailboxMessages([
-  { subject: "OpenAI API ?????", bodyPreview: "????? API ???" },
+  { subject: "OpenAI API 密钥已撤销", bodyPreview: "请创建新的 API 密钥。" },
 ]);
 assert.equal(chineseKeyLifecycle.banned, false);
 
 const chineseRestoredNotice = inspectMailboxMessages([
-  { subject: "OpenAI API - ???????", bodyPreview: "??????????????????" },
+  { subject: "OpenAI API - 访问限制已解除", bodyPreview: "此前账户已被暂停，现在已经恢复正常。" },
 ]);
 assert.equal(chineseRestoredNotice.banned, false);
 
 const rewardWithUsageNotice = inspectMailboxMessages([
   {
-    subject: "?? ChatGPT ????????????",
-    bodyPreview: "??????? 1,000 ??????????",
+    subject: "你的 ChatGPT 桌面版推荐奖励已准备就绪",
+    bodyPreview: "你和好友各获得 1,000 额度，禁止滥用服务。",
   },
 ]);
 assert.equal(rewardWithUsageNotice.credits, 1000);
 assert.equal(rewardWithUsageNotice.banned, false);
 
 const unrelatedChineseAmount = inspectMailboxMessages([
-  { subject: "????", bodyPreview: "??????? 1,000 ??" },
+  { subject: "账户通知", bodyPreview: "本月账单金额为 1,000 元。" },
 ]);
 assert.equal(unrelatedChineseAmount.credits, null);
 assert.equal(unrelatedChineseAmount.rewardStatus, "not_found");
